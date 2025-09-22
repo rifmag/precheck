@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Pre-Check Ujian</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #e6f3ff; /* biru muda */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: white;
+      padding: 30px 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      text-align: center;
+      max-width: 500px;
+      width: 100%;
+    }
+    h2 {
+      margin-bottom: 20px;
+      color: #0056b3;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+      text-align: left;
+    }
+    li {
+      margin: 8px 0;
+      font-size: 15px;
+    }
+    .ok { color: green; font-weight: bold; }
+    .fail { color: red; font-weight: bold; }
+    .warn { color: orange; font-weight: bold; }
+    #startBtn {
+      margin-top: 20px;
+      padding: 12px 20px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    #startBtn:disabled {
+      background: gray;
+      cursor: not-allowed;
+    }
+    a {
+      color: #007bff;
+      text-decoration: none;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>✅ Pre-Check Device Ujian</h2>
+    <ul>
+      <li id="os">OS: Checking...</li>
+      <li id="ram">RAM: Checking...</li>
+      <li id="cpu">CPU: Checking...</li>
+      <li id="storage">Storage: Checking...</li>
+      <li id="resolution">Resolusi Layar: Checking...</li>
+      <li id="camera">Camera: Checking...</li>
+      <li id="internet">Internet: Checking...</li>
+     
+    </ul>
+    <button id="startBtn" disabled>Mulai Ujian</button>
+  </div>
+
+  <script>
+    let passed = {
+      ram: false, cpu: false, storage: false,
+      resolution: false, camera: false, internet: false
+    };
+
+    function updateStartButton() {
+      const allOk = Object.values(passed).every(v => v === true);
+      document.getElementById("startBtn").disabled = !allOk;
+    }
+
+    // OS check
+    document.getElementById("os").innerText = "OS: " + navigator.userAgent;
+
+    // RAM check
+    if (navigator.deviceMemory) {
+      if (navigator.deviceMemory >= 8) {
+        document.getElementById("ram").innerHTML = "RAM: <span class='ok'>✅ " + navigator.deviceMemory + "GB</span>";
+        passed.ram = true;
+      } else {
+        document.getElementById("ram").innerHTML = "RAM: <span class='fail'>❌ minimal 8GB</span>";
+      }
+    } else {
+      document.getElementById("ram").innerHTML = "RAM: <span class='warn'>⚠️ tidak bisa terdeteksi</span>";
+    }
+
+    // CPU check
+    if (navigator.hardwareConcurrency) {
+      if (navigator.hardwareConcurrency >= 2) {
+        document.getElementById("cpu").innerHTML = "CPU: <span class='ok'>✅ " + navigator.hardwareConcurrency + " core</span>";
+        passed.cpu = true;
+      } else {
+        document.getElementById("cpu").innerHTML = "CPU: <span class='fail'>❌ minimal dual-core</span>";
+      }
+    }
+
+    // Storage check
+    if (navigator.storage && navigator.storage.estimate) {
+      navigator.storage.estimate().then(estimate => {
+        const gb = (estimate.quota / (1024 ** 3)).toFixed(1);
+        if (gb >= 10) {
+          document.getElementById("storage").innerHTML = "Storage: <span class='ok'>✅ " + gb + " GB tersedia</span>";
+          passed.storage = true;
+        } else {
+          document.getElementById("storage").innerHTML = "Storage: <span class='fail'>❌ minimal 10GB, terdeteksi " + gb + " GB</span>";
+        }
+        updateStartButton();
+      });
+    }
+
+    // Resolusi layar
+    const w = window.screen.width;
+    const h = window.screen.height;
+    if (w >= 1024 && h >= 720) {
+      document.getElementById("resolution").innerHTML = "Resolusi Layar: <span class='ok'>✅ " + w + "x" + h + "</span>";
+      passed.resolution = true;
+    } else {
+      document.getElementById("resolution").innerHTML = "Resolusi Layar: <span class='fail'>❌ minimal 1024x720, terdeteksi " + w + "x" + h + "</span>";
+    }
+
+    // Camera check
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(() => {
+        document.getElementById("camera").innerHTML = "Camera: <span class='ok'>✅ tersedia</span>";
+        passed.camera = true;
+        updateStartButton();
+      })
+      .catch(() => {
+        document.getElementById("camera").innerHTML = "Camera: <span class='fail'>❌ tidak terdeteksi</span>";
+      });
+
+    // Internet check
+    async function checkInternet() {
+      const url = "https://httpbin.org/get";
+      let success = false;
+      for (let i = 0; i < 2; i++) {
+        try {
+          const res = await fetch(url + "?t=" + Date.now(), {cache: "no-cache"});
+          if (res.ok) {
+            success = true;
+            break;
+          }
+        } catch (e) {}
+      }
+      if (success) {
+        document.getElementById("internet").innerHTML = "Internet: <span class='ok'>✅ terhubung</span>";
+        passed.internet = true;
+      } else {
+        document.getElementById("internet").innerHTML = "Internet: <span class='fail'>❌ tidak dapat mengakses server</span>";
+      }
+      updateStartButton();
+    }
+    checkInternet();
+
+    
+
+    // Tombol mulai ujian
+    document.getElementById("startBtn").onclick = () => {
+      window.location.href = "https://klc2.kemenkeu.go.id/cat"; // link ujian
+    };
+
+    updateStartButton();
+  </script>
+</body>
+</html>
