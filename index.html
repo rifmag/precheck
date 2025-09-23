@@ -51,16 +51,11 @@
       background: gray;
       cursor: not-allowed;
     }
-    a {
-      color: #007bff;
-      text-decoration: none;
-      font-weight: bold;
-    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>✅ Check Device Ujian</h2>
+    <h2>✅ Pre-Check Device Ujian</h2>
     <ul>
       <li id="os">OS: Checking...</li>
       <li id="ram">RAM: Checking...</li>
@@ -69,14 +64,13 @@
       <li id="resolution">Resolusi Layar: Checking...</li>
       <li id="camera">Camera: Checking...</li>
       <li id="internet">Internet: Checking...</li>
-     
     </ul>
     <button id="startBtn" disabled>Mulai Ujian</button>
   </div>
 
   <script>
     let passed = {
-      ram: false, cpu: false, storage: false,
+      os: false, ram: false, cpu: false, storage: false,
       resolution: false, camera: false, internet: false
     };
 
@@ -85,8 +79,28 @@
       document.getElementById("startBtn").disabled = !allOk;
     }
 
-    // OS check
-    document.getElementById("os").innerText = "OS: " + navigator.userAgent;
+    // OS check → hanya izinkan Windows 10 ke atas
+    const ua = navigator.userAgent;
+    let osText = "Unknown";
+    if (/Windows NT 10\.0/i.test(ua) || /Windows NT 1[1-9]\.0/i.test(ua)) {
+      osText = "Windows 10/11 ✅";
+      passed.os = true;
+      document.getElementById("os").innerHTML = "OS: <span class='ok'>" + osText + "</span>";
+    } else if (/Windows NT/i.test(ua)) {
+      osText = "Windows versi lama ❌";
+      document.getElementById("os").innerHTML = "OS: <span class='fail'>" + osText + "</span>";
+    } else if (/Mac OS|Macintosh/i.test(ua)) {
+      osText = "macOS ❌ tidak diizinkan";
+      document.getElementById("os").innerHTML = "OS: <span class='fail'>" + osText + "</span>";
+    } else if (/Linux/i.test(ua)) {
+      osText = "Linux ❌ tidak diizinkan";
+      document.getElementById("os").innerHTML = "OS: <span class='fail'>" + osText + "</span>";
+    } else if (/Android/i.test(ua) || /iPhone|iPad/i.test(ua)) {
+      osText = "Mobile OS ❌ tidak diizinkan";
+      document.getElementById("os").innerHTML = "OS: <span class='fail'>" + osText + "</span>";
+    } else {
+      document.getElementById("os").innerHTML = "OS: <span class='warn'>⚠️ tidak terdeteksi dengan pasti</span>";
+    }
 
     // RAM check
     if (navigator.deviceMemory) {
@@ -168,8 +182,6 @@
     }
     checkInternet();
 
-    
-
     // Tombol mulai ujian
     document.getElementById("startBtn").onclick = () => {
       window.location.href = "https://klc2.kemenkeu.go.id/cat"; // link ujian
@@ -179,4 +191,5 @@
   </script>
 </body>
 </html>
+
 
